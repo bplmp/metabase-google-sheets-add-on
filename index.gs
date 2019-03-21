@@ -39,8 +39,8 @@ function getToken(baseUrl, username, password) {
 }
 
 function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum) {
-  var questionUrl = baseUrl + "api/card/" + metabaseQuestionNum + "/query/json";
-  
+  var questionUrl = baseUrl + "api/card/" + metabaseQuestionNum + "/query/csv";
+
   var options = {
     "method": "post",
     "headers": {
@@ -49,18 +49,18 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum) {
     },
     "muteHttpExceptions": true
   };
-  
+
   var response = UrlFetchApp.fetch(questionUrl, options);
   var statusCode = response.getResponseCode();
-  
+
   if (statusCode == 200) {
-    var values = JSON.parse(response.getContentText())
+    var values = Utilities.parseCsv(response.getContentText());
     fillSheet(values);
   } else if (statusCode == 401) {
     var scriptProp = PropertiesService.getScriptProperties();
     var username = scriptProp.getProperty('USERNAME');
     var password = scriptProp.getProperty('PASSWORD');
-    
+
     var token = getToken(baseUrl, username, password);
     scriptProp.setProperty('TOKEN', token);
     throw ("Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes.");
@@ -76,19 +76,8 @@ function fillSheet(values) {
     contentsOnly: true
   });
 
-  var header = Object.keys(values[0])
-  var rows = []
-  rows.push(header)
-  for (var i = 0; i < values.length; i++) {
-    var row = [];
-    var value = values[i];
-    for (var key in value) {
-      if (value.hasOwnProperty(key)) {
-        row.push(value[key]);
-      }
-    }
-    rows.push(row)
-  }
+  var rows = values;
+  var header = rows[0];
   var minCol = colLetters[0];
   var maxCol = colLetters[header.length - 1];
   var minRow = 1;
