@@ -4,7 +4,6 @@ function onInstall() {
 
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
-  // Or DocumentApp or FormApp.
   ui.createMenu('Metabase')
       .addItem('Import Question', 'importQuestion')
       .addToUi();
@@ -83,8 +82,6 @@ function fillSheet(values) {
   var minRow = 1;
   var maxRow = rows.length;
   var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(minCol + minRow + ":" + maxCol + maxRow);
-  // Logger.log(minCol + minRow + ":" + maxCol + maxRow)
-  // Logger.log(response.getContentText())
   range.setValues(rows);
 }
 
