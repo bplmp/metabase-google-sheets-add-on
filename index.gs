@@ -26,25 +26,31 @@ function importAllQuestions() {
 
   var result = ui.alert(
      'Please confirm',
-     'This will import all data for sheets (tabs) beginning with "metabase/". After the slash should be a Metabase question number (example: "metabase/152" will import question 152).',
+     'This will import all data for sheets containing "(metabase/QUESTION_NUMBER)". After the slash should be a Metabase question number (example: "(metabase/152)" will import question 152).',
       ui.ButtonSet.YES_NO);
 
   if (result == ui.Button.YES) {
-    var questionNumbers = getSheetNumbers();
+    var questions = getSheetNumbers();
 
-    if (questionNumbers.length === 0) {
+    if (questions.length === 0) {
       ui.alert("Couldn't find any question numbers to import.");
       return;
     }
+
+    var questionNumbers = [];
+    for (var i = 0; i < questions.length; i++) {
+      questionNumbers.push(questions[i].questionNumber);
+    }
+
     var go = ui.alert(
        'Please confirm',
-       'This will import ' + questionNumbers.length + ' question(s): ' + questionNumbers.join(', ') + '. Continue?',
+       'This will import ' + questions.length + ' question(s): ' + questionNumbers.join(', ') + '. Continue?',
         ui.ButtonSet.YES_NO);
 
     if (go == ui.Button.YES) {
-      for (var i = 0; i < questionNumbers.length; i++) {
-        var questionNumber = questionNumbers[i];
-        sheetName = 'metabase/' + questionNumber;
+      for (var i = 0; i < questions.length; i++) {
+        var questionNumber = questions[i].questionNumber;
+        var sheetName = questions[i].sheetName;
         ui.alert('Importing question ' + questionNumber);
         getQuestionAsCSV(questionNumber, sheetName);
       }
@@ -62,10 +68,13 @@ function getSheetNumbers() {
   var questionNumbers = [];
   for(i in sheets){
     var sheetName = sheets[i].getName();
-    if(sheetName.indexOf('metabase/') > -1) {
-      var questionNumber = sheetName.split('/')[1];
-      if (!isNaN(questionNumber) && questionNumber !== '') {
-        questionNumbers.push(questionNumber);
+    if(sheetName.indexOf('(metabase/') > -1) {
+      var questionMatch = sheetName.match('\(metabase\/[0-9]+\)');
+      if (questionMatch !== null) {
+        var questionNumber = questionMatch[0].match('[0-9]+')[0];
+        if (!isNaN(questionNumber) && questionNumber !== '') {
+          questionNumbers.push({'questionNumber': questionNumber, 'sheetName' : sheetName});
+        }
       }
     }
   }
