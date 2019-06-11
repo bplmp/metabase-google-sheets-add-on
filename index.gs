@@ -13,7 +13,13 @@ function onOpen() {
 function importQuestion() {
   var metabaseQuestionNum = Browser.inputBox('Metabase question number (This will replace all data in the current tab with the result)', Browser.Buttons.OK_CANCEL);
   if (metabaseQuestionNum != 'cancel' && !isNaN(metabaseQuestionNum)) {
-    getQuestionAsCSV(metabaseQuestionNum, false);
+    var status = getQuestionAsCSV(metabaseQuestionNum, false);
+
+    if (status.success === true) {
+      SpreadsheetApp.getUi().alert('Question ' + metabaseQuestionNum + ' successfully imported.');
+    } else {
+      SpreadsheetApp.getUi().alert('Question ' + metabaseQuestionNum + ' failed to import. ' + status.error);
+    }
   } else if (metabaseQuestionNum == 'cancel') {
     SpreadsheetApp.getUi().alert('You have canceled.');
   } else {
@@ -31,6 +37,9 @@ function importAllQuestions() {
 
   if (result == ui.Button.YES) {
     var questions = getSheetNumbers();
+    for (var i = 0; i < questions.length; i++) {
+      questions[i].done = false;
+    }
 
     if (questions.length === 0) {
       ui.alert("Couldn't find any question numbers to import.");
@@ -48,12 +57,38 @@ function importAllQuestions() {
         ui.ButtonSet.YES_NO);
 
     if (go == ui.Button.YES) {
+      var startDate = new Date().toLocaleTimeString();
+      var htmlOutput = HtmlService.createHtmlOutput('<p>Started running at ' + startDate + '...</p>');
+      ui.showModalDialog(htmlOutput, 'Importing questions');
+      var questionsSuccess = [];
+      var questionsError = [];
       for (var i = 0; i < questions.length; i++) {
         var questionNumber = questions[i].questionNumber;
         var sheetName = questions[i].sheetName;
-        ui.alert('Importing question ' + questionNumber);
-        getQuestionAsCSV(questionNumber, sheetName);
+        var status = getQuestionAsCSV(questionNumber, sheetName);
+        if (status.success === true) {
+          questionsSuccess.push({'number': questionNumber});
+        } else if (status.success === false) {
+          questionsError.push({'number': questionNumber, 'errorMessage': status.error});
+        }
       }
+
+      var endDate = new Date().toLocaleTimeString();
+      htmlOutput.append('<p>Finished at ' + endDate + '.</p></hr>');
+      if (questionsSuccess.length > 0) {
+        htmlOutput.append('<p>Successfully imported:</p>')
+        for (var i = 0; i < questionsSuccess.length; i++) {
+          htmlOutput.append('<li>' + questionsSuccess[i].number + '</li>')
+        }
+      }
+      if (questionsError.length > 0) {
+        htmlOutput.append('<p>Failed to import:</p>')
+        for (var i = 0; i < questionsError.length; i++) {
+          htmlOutput.append('<li>' + questionsError[i].number + '</br>(' + questionsError[i].errorMessage + ')</li>')
+        }
+      }
+      ui.showModalDialog(htmlOutput, 'Importing questions');
+
     } else {
       ui.alert('You have canceled.');
     }
@@ -93,7 +128,12 @@ function getToken(baseUrl, username, password) {
       password: password
     })
   };
-  var response = UrlFetchApp.fetch(sessionUrl, options);
+  var response;
+  try {
+    response = UrlFetchApp.fetch(sessionUrl, options);
+  } catch (e) {
+    throw(e)
+  }
   var token = JSON.parse(response).id
   return token;
 }
@@ -110,12 +150,22 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
     "muteHttpExceptions": true
   };
 
-  var response = UrlFetchApp.fetch(questionUrl, options);
+  var response;
+  try {
+    response = UrlFetchApp.fetch(questionUrl, options);
+  } catch (e) {
+    return {'success': false, 'error': e}
+  }
   var statusCode = response.getResponseCode();
 
   if (statusCode == 200) {
     var values = Utilities.parseCsv(response.getContentText());
-    fillSheet(values, sheetName);
+    try {
+      fillSheet(values, sheetName);
+      return {'success': true}
+    } catch (e) {
+      return {'success': false, 'error': e}
+    }
   } else if (statusCode == 401) {
     var scriptProp = PropertiesService.getScriptProperties();
     var username = scriptProp.getProperty('USERNAME');
@@ -123,9 +173,11 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
 
     var token = getToken(baseUrl, username, password);
     scriptProp.setProperty('TOKEN', token);
-    throw ("Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes.");
+    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes."
+    return {'success': false, 'error': e}
   } else {
-    throw ("Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again later.");
+    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again later."
+    return {'success': false, 'error': e}
   }
 }
 
@@ -165,5 +217,6 @@ function getQuestionAsCSV(metabaseQuestionNum, sheetName) {
     scriptProp.setProperty('TOKEN', token);
   }
 
-  getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName);
+  status = getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName);
+  return status;
 }
