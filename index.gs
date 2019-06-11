@@ -15,6 +15,18 @@ function importQuestion() {
   if (metabaseQuestionNum != 'cancel' && !isNaN(metabaseQuestionNum)) {
     var status = getQuestionAsCSV(metabaseQuestionNum, false);
 
+    var log = {
+      'user': Session.getActiveUser().getEmail(),
+      'function': 'importQuestion',
+      'questionNumber': metabaseQuestionNum,
+      'status': status
+    };
+    if (log.status === true) {
+      console.log(log);
+    } else {
+      console.error(log);
+    }
+
     if (status.success === true) {
       SpreadsheetApp.getUi().alert('Question ' + metabaseQuestionNum + ' successfully imported.');
     } else {
@@ -67,7 +79,7 @@ function importAllQuestions() {
         var sheetName = questions[i].sheetName;
         var status = getQuestionAsCSV(questionNumber, sheetName);
         if (status.success === true) {
-          questionsSuccess.push({'number': questionNumber});
+          questionsSuccess.push(questionNumber);
         } else if (status.success === false) {
           questionsError.push({'number': questionNumber, 'errorMessage': status.error});
         }
@@ -78,7 +90,7 @@ function importAllQuestions() {
       if (questionsSuccess.length > 0) {
         htmlOutput.append('<p>Successfully imported:</p>')
         for (var i = 0; i < questionsSuccess.length; i++) {
-          htmlOutput.append('<li>' + questionsSuccess[i].number + '</li>')
+          htmlOutput.append('<li>' + questionsSuccess[i] + '</li>')
         }
       }
       if (questionsError.length > 0) {
@@ -88,6 +100,24 @@ function importAllQuestions() {
         }
       }
       ui.showModalDialog(htmlOutput, 'Importing questions');
+
+      var finalStatus;
+      if (questionsError.length === 0) {
+        finalStatus = true;
+      } else {
+        finalStatus = false;
+      }
+      var log = {
+        'user': Session.getActiveUser().getEmail(),
+        'function': 'importAllQuestions',
+        'questionNumber': questionNumbers,
+        'status': {'success': finalStatus, 'questionsSuccess': questionsSuccess, 'questionsError': questionsError}
+      };
+      if (log.status === true) {
+        console.log(log);
+      } else {
+        console.error(log);
+      }
 
     } else {
       ui.alert('You have canceled.');
