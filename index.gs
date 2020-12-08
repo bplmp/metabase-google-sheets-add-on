@@ -5,9 +5,9 @@ function onInstall() {
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Metabase')
-      .addItem('Import Question', 'importQuestion')
-      .addItem('Import All Questions in Sheets', 'importAllQuestions')
-      .addToUi();
+    .addItem('Import Question', 'importQuestion')
+    .addItem('Import All Questions in Sheets', 'importAllQuestions')
+    .addToUi();
 }
 
 function importQuestion() {
@@ -43,9 +43,9 @@ function importAllQuestions() {
   var ui = SpreadsheetApp.getUi();
 
   var result = ui.alert(
-     'Please confirm',
-     'This will import all data for sheets containing "(metabase/QUESTION_NUMBER)". After the slash should be a Metabase question number (example: "(metabase/152)" will import question 152).',
-      ui.ButtonSet.YES_NO);
+    'Please confirm',
+    'This will import all data for sheets containing "(metabase/QUESTION_NUMBER)". After the slash should be a Metabase question number (example: "(metabase/152)" will import question 152).',
+    ui.ButtonSet.YES_NO);
 
   if (result == ui.Button.YES) {
     var questions = getSheetNumbers();
@@ -64,9 +64,9 @@ function importAllQuestions() {
     }
 
     var go = ui.alert(
-       'Please confirm',
-       'This will import ' + questions.length + ' question(s): ' + questionNumbers.join(', ') + '. Continue?',
-        ui.ButtonSet.YES_NO);
+      'Please confirm',
+      'This will import ' + questions.length + ' question(s): ' + questionNumbers.join(', ') + '. Continue?',
+      ui.ButtonSet.YES_NO);
 
     if (go == ui.Button.YES) {
       var startDate = new Date().toLocaleTimeString();
@@ -81,22 +81,25 @@ function importAllQuestions() {
         if (status.success === true) {
           questionsSuccess.push(questionNumber);
         } else if (status.success === false) {
-          questionsError.push({'number': questionNumber, 'errorMessage': status.error});
+          questionsError.push({
+            'number': questionNumber,
+            'errorMessage': status.error
+          });
         }
       }
 
       var endDate = new Date().toLocaleTimeString();
       htmlOutput.append('<p>Finished at ' + endDate + '.</p></hr>');
       if (questionsSuccess.length > 0) {
-        htmlOutput.append('<p>Successfully imported:</p>')
+        htmlOutput.append('<p>Successfully imported:</p>');
         for (var i = 0; i < questionsSuccess.length; i++) {
-          htmlOutput.append('<li>' + questionsSuccess[i] + '</li>')
+          htmlOutput.append('<li>' + questionsSuccess[i] + '</li>');
         }
       }
       if (questionsError.length > 0) {
-        htmlOutput.append('<p>Failed to import:</p>')
+        htmlOutput.append('<p>Failed to import:</p>');
         for (var i = 0; i < questionsError.length; i++) {
-          htmlOutput.append('<li>' + questionsError[i].number + '</br>(' + questionsError[i].errorMessage + ')</li>')
+          htmlOutput.append('<li>' + questionsError[i].number + '</br>(' + questionsError[i].errorMessage + ')</li>');
         }
       }
       ui.showModalDialog(htmlOutput, 'Importing questions');
@@ -111,7 +114,11 @@ function importAllQuestions() {
         'user': Session.getActiveUser().getEmail(),
         'function': 'importAllQuestions',
         'questionNumber': questionNumbers,
-        'status': {'success': finalStatus, 'questionsSuccess': questionsSuccess, 'questionsError': questionsError}
+        'status': {
+          'success': finalStatus,
+          'questionsSuccess': questionsSuccess,
+          'questionsError': questionsError
+        }
       };
       if (log.status === true) {
         console.log(log);
@@ -131,14 +138,17 @@ function getSheetNumbers() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ss.getSheets();
   var questionNumbers = [];
-  for(i in sheets){
+  for (var i in sheets) {
     var sheetName = sheets[i].getName();
-    if(sheetName.indexOf('(metabase/') > -1) {
+    if (sheetName.indexOf('(metabase/') > -1) {
       var questionMatch = sheetName.match('\(metabase\/[0-9]+\)');
       if (questionMatch !== null) {
         var questionNumber = questionMatch[0].match('[0-9]+')[0];
         if (!isNaN(questionNumber) && questionNumber !== '') {
-          questionNumbers.push({'questionNumber': questionNumber, 'sheetName' : sheetName});
+          questionNumbers.push({
+            'questionNumber': questionNumber,
+            'sheetName': sheetName
+          });
         }
       }
     }
@@ -147,7 +157,7 @@ function getSheetNumbers() {
 }
 
 function getToken(baseUrl, username, password) {
-  var sessionUrl = baseUrl + "api/session"
+  var sessionUrl = baseUrl + "api/session";
   var options = {
     "method": "post",
     "headers": {
@@ -162,9 +172,9 @@ function getToken(baseUrl, username, password) {
   try {
     response = UrlFetchApp.fetch(sessionUrl, options);
   } catch (e) {
-    throw(e)
+    throw (e);
   }
-  var token = JSON.parse(response).id
+  var token = JSON.parse(response).id;
   return token;
 }
 
@@ -184,7 +194,10 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
   try {
     response = UrlFetchApp.fetch(questionUrl, options);
   } catch (e) {
-    return {'success': false, 'error': e}
+    return {
+      'success': false,
+      'error': e
+    };
   }
   var statusCode = response.getResponseCode();
 
@@ -192,9 +205,14 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
     var values = Utilities.parseCsv(response.getContentText());
     try {
       fillSheet(values, sheetName);
-      return {'success': true}
+      return {
+        'success': true
+      };
     } catch (e) {
-      return {'success': false, 'error': e}
+      return {
+        'success': false,
+        'error': e
+      };
     }
   } else if (statusCode == 401) {
     var scriptProp = PropertiesService.getScriptProperties();
@@ -203,11 +221,17 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
 
     var token = getToken(baseUrl, username, password);
     scriptProp.setProperty('TOKEN', token);
-    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes."
-    return {'success': false, 'error': e}
+    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes.";
+    return {
+      'success': false,
+      'error': e
+    };
   } else {
-    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again later."
-    return {'success': false, 'error': e}
+    var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again later.";
+    return {
+      'success': false,
+      'error': e
+    };
   }
 }
 
