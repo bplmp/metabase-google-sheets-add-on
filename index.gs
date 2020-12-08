@@ -188,7 +188,7 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
   }
   var statusCode = response.getResponseCode();
 
-  if (statusCode == 200) {
+  if (statusCode == 200 || statusCode == 202) {
     var values = Utilities.parseCsv(response.getContentText());
     try {
       fillSheet(values, sheetName);
