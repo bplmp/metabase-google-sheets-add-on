@@ -16,9 +16,9 @@ It has two main functions that an user can access:
 Currently, the add-on authenticates with Metabase by using a user account. You can use your own user account or create a dedicated one for the add-on. It sends the username and password and [gets a token](https://github.com/metabase/metabase/wiki/Using-the-REST-API#authorizing) in response that it uses to make requests. If the token is expired (after a certain period of time it will expire) then the script requests a new token.
 
 When deploying for the first time, remember to set following ENV vars in your Google Script Project file, by going to File -> Project Properties:
-  - `BASE_URL`
-  - `USERNAME`
-  - `PASSWORD`
+  - `BASE_URL` (the url to your metabase instance with a trailing slash, e.g. `https://my-company.metabase.com/`)
+  - `USERNAME` (a Metabase username)
+  - `PASSWORD` (a Metabase user password)
   - `TOKEN` (do not set it; it will be set automatically)
 
 ## Publishing the Add-on
