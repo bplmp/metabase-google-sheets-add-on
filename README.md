@@ -25,4 +25,4 @@ When deploying for the first time, remember to set following ENV vars in your Go
 
 Publishing a Google Apps Add-on is a tricky process. For help on how to publish a Google Sheets Add-on: https://developers.google.com/gsuite/add-ons/how-tos/publishing-editor-addons.
 
-Otherwise, you can just use the code as a simple Google Apps Script.
+Otherwise, you can just use the code as a simple Google Apps Script. Remember, to access the Project Properties, you might have to [switch to the old (legacy) Google Apps Script editor](https://stackoverflow.com/questions/65342439/upgrade-to-apps-script-new-ide-after-downgrading).
