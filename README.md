@@ -26,3 +26,16 @@ When deploying for the first time, remember to set following ENV vars in your Go
 Publishing a Google Apps Add-on is a tricky process. For help on how to publish a Google Sheets Add-on: https://developers.google.com/gsuite/add-ons/how-tos/publishing-editor-addons.
 
 Otherwise, you can just use the code as a simple Google Apps Script. Remember, to access the Project Properties, you might have to [switch to the old (legacy) Google Apps Script editor](https://stackoverflow.com/questions/65342439/upgrade-to-apps-script-new-ide-after-downgrading).
+
+## Use It Personally
+
+This script could be used for eacch spreadsheet with these steps:
+1.   Put index.gs into Apps Script
+2.   Set vars ENV
+3.   Import onInstall macro into your spreadsheet
+4.   Run onInstall macro
+5.   Grant Scripts access
+6.   Refresh your Spreadsheet
+7.   Voila..!!!!
+
+![This gif shows what users see in the add-on interface](images/metabase-personal.gif)
