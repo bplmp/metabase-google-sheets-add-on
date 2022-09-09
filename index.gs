@@ -219,6 +219,8 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
     }
   } else if (statusCode == 401) {
     var scriptProp = PropertiesService.getScriptProperties();
+    var userscriptProp = PropertiesService.getUserProperties();
+
     var token = getToken(baseUrl);
     userscriptProp.setProperty('METABASE_TOKEN', token);
     var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes.";
