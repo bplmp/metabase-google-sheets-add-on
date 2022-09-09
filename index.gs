@@ -156,7 +156,10 @@ function getSheetNumbers() {
   return questionNumbers;
 }
 
-function getToken(baseUrl, username, password) {
+function getToken(baseUrl) {
+  var username = Browser.inputBox('enter metabase user name', Browser.Buttons.OK_CANCEL);
+  # FIXME: i couldn't find any password input. this needs a workaround
+  var password = Browser.inputBox('enter metabase password', Browser.Buttons.OK_CANCEL);
   var sessionUrl = baseUrl + "api/session";
   var options = {
     "method": "post",
@@ -216,11 +219,10 @@ function getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName)
     }
   } else if (statusCode == 401) {
     var scriptProp = PropertiesService.getScriptProperties();
-    var username = scriptProp.getProperty('USERNAME');
-    var password = scriptProp.getProperty('PASSWORD');
+    var userscriptProp = PropertiesService.getUserProperties();
 
-    var token = getToken(baseUrl, username, password);
-    scriptProp.setProperty('TOKEN', token);
+    var token = getToken(baseUrl);
+    userscriptProp.setProperty('METABASE_TOKEN', token);
     var e = "Error: Could not retrieve question. Metabase says: '" + response.getContentText() + "'. Please try again in a few minutes.";
     return {
       'success': false,
@@ -261,14 +263,14 @@ function fillSheet(values, sheetName) {
 
 function getQuestionAsCSV(metabaseQuestionNum, sheetName) {
   var scriptProp = PropertiesService.getScriptProperties();
-  var baseUrl = scriptProp.getProperty('BASE_URL');
-  var username = scriptProp.getProperty('USERNAME');
-  var password = scriptProp.getProperty('PASSWORD');
-  var token = scriptProp.getProperty('TOKEN');
+  var userscriptProp = PropertiesService.getUserProperties();
+
+  var baseUrl = scriptProp.getProperty('METABASE_BASE_URL');
+  var token = userscriptProp.getProperty('METABASE_TOKEN');
 
   if (!token) {
-    token = getToken(baseUrl, username, password);
-    scriptProp.setProperty('TOKEN', token);
+    token = getToken(baseUrl);
+    userscriptProp.setProperty('METABASE_TOKEN', token);
   }
 
   status = getQuestionAndFillSheet(baseUrl, token, metabaseQuestionNum, sheetName);
